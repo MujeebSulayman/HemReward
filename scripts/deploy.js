@@ -42,8 +42,8 @@ async function main() {
       JSON.stringify(
         {
           NECTR: nectrAddress,
-          network: "mumbai",
-          chainId: 80001,
+          network: "sepolia",
+          chainId: 11155111,
         },
         undefined,
         2

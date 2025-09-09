@@ -25,7 +25,7 @@ const getEthereumContract = async () => {
     return contract;
   } else {
     const provider = new ethers.JsonRpcProvider(
-      process.env.NEXT_PUBLIC_MUMBAI_RPC_URL || 'https://polygon-mumbai.g.alchemy.com/v2/demo'
+      process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://sepolia.infura.io/v3/your-project-id'
     );
     const contract = new ethers.Contract(address.NECTR, abi.abi, provider);
     return contract;
@@ -137,18 +137,35 @@ const getPendingRewards = async (address: string): Promise<string> => {
   }
 };
 
-const getStakeInfo = async (address: string): Promise<{amount: string, timestamp: number, rewardRate: number}> => {
+const getStakeInfo = async (address: string): Promise<{
+  amount: string;
+  timestamp: number;
+  lastClaimTime: number;
+  tier: number;
+  totalRewardsClaimed: string;
+  isActive: boolean;
+}> => {
   try {
     const contract = await getEthereumContract();
-    const [amount, timestamp, rewardRate] = await contract.getStakeInfo(address);
+    const stakeInfo = await contract.getStakeInfo(address);
     return {
-      amount: fromWei(amount),
-      timestamp: Number(timestamp),
-      rewardRate: Number(rewardRate)
+      amount: fromWei(stakeInfo.amount),
+      timestamp: Number(stakeInfo.timestamp),
+      lastClaimTime: Number(stakeInfo.lastClaimTime),
+      tier: Number(stakeInfo.tier),
+      totalRewardsClaimed: fromWei(stakeInfo.totalRewardsClaimed),
+      isActive: stakeInfo.isActive
     };
   } catch (error) {
     console.error("Error getting stake info:", error);
-    return { amount: "0", timestamp: 0, rewardRate: 0 };
+    return { 
+      amount: "0", 
+      timestamp: 0, 
+      lastClaimTime: 0,
+      tier: 0,
+      totalRewardsClaimed: "0",
+      isActive: false 
+    };
   }
 };
 
@@ -163,15 +180,79 @@ const getTokenBalance = async (address: string): Promise<string> => {
   }
 };
 
+// Enhanced contract functions
+const getUserTier = async (address: string): Promise<number> => {
+  try {
+    const contract = await getEthereumContract();
+    const tier = await contract.getUserTier(address);
+    return Number(tier);
+  } catch (error) {
+    console.error("Error getting user tier:", error);
+    return 0;
+  }
+};
+
+const getTierInfo = async (tier: number): Promise<{
+  minAmount: string;
+  maxAmount: string;
+  apyRate: number;
+  name: string;
+}> => {
+  try {
+    const contract = await getEthereumContract();
+    const tierInfo = await contract.getTierInfo(tier);
+    return {
+      minAmount: fromWei(tierInfo.minAmount),
+      maxAmount: fromWei(tierInfo.maxAmount),
+      apyRate: Number(tierInfo.apyRate),
+      name: tierInfo.name
+    };
+  } catch (error) {
+    console.error("Error getting tier info:", error);
+    return {
+      minAmount: "0",
+      maxAmount: "0",
+      apyRate: 0,
+      name: "Unknown"
+    };
+  }
+};
+
+const getContractStats = async (): Promise<{
+  totalStaked: string;
+  totalRewards: string;
+  totalSupply: string;
+  maxSupply: string;
+}> => {
+  try {
+    const contract = await getEthereumContract();
+    const stats = await contract.getContractStats();
+    return {
+      totalStaked: fromWei(stats.totalStaked),
+      totalRewards: fromWei(stats.totalRewards),
+      totalSupply: fromWei(stats.totalSupply),
+      maxSupply: fromWei(stats.maxSupply)
+    };
+  } catch (error) {
+    console.error("Error getting contract stats:", error);
+    return {
+      totalStaked: "0",
+      totalRewards: "0",
+      totalSupply: "0",
+      maxSupply: "0"
+    };
+  }
+};
+
 // Owner functions (for testing/demo purposes)
-const mintTokens = async (to: string, amount: number): Promise<any> => {
+const mintTokens = async (to: string, amount: number, reason: string = "Demo minting"): Promise<any> => {
   if (!ethereum) {
     return Promise.reject(new Error("Please install a wallet provider"));
   }
 
   try {
     const contract = await getEthereumContract();
-    tx = await contract.mint(to, toWei(amount));
+    tx = await contract.mint(to, toWei(amount), reason);
     await tx.wait();
     return Promise.resolve(tx);
   } catch (error: any) {
@@ -191,6 +272,9 @@ export {
   getPendingRewards,
   getStakeInfo,
   getTokenBalance,
+  getUserTier,
+  getTierInfo,
+  getContractStats,
   mintTokens,
   toWei,
   fromWei,
