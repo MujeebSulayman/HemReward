@@ -23,7 +23,7 @@ const Hero = () => {
             >
               <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse mr-2"></span>
               <span className="text-purple-200 text-sm">
-                Web3 Healthcare Revolution
+                NECTR Token Ecosystem
               </span>
             </motion.div>
 
@@ -33,9 +33,9 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
             >
-              Transform Your <br />
+              Welcome to <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">
-                Healthcare Journey
+                NECTR Token
               </span>
             </motion.h1>
 
@@ -45,9 +45,8 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
             >
-              Join the future of healthcare rewards. Track appointments, earn
-              tokens, and unlock exclusive benefits while prioritizing your
-              well-being.
+              Experience the future of decentralized healthcare rewards. Stake your NECTR tokens, 
+              earn rewards, and join a vibrant community revolutionizing healthcare through blockchain technology.
             </motion.p>
 
             <motion.div
@@ -72,9 +71,9 @@ const Hero = () => {
               className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-8 mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-purple-700/30"
             >
               {[
-                { value: "10K+", label: "Active Users" },
-                { value: "$2M+", label: "Rewards Given" },
-                { value: "98%", label: "Satisfaction" },
+                { value: "100M", label: "NECTR Tokens" },
+                { value: "10%", label: "Staking APY" },
+                { value: "1B", label: "Max Supply" },
               ].map((stat, index) => (
                 <div key={index} className="text-center px-2">
                   <div className="text-xl sm:text-2xl font-bold text-white mb-1">

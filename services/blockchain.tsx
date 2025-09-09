@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import address from "../contracts/contractAddress.json";
-import abi from '@artifacts/contracts/HemReward.sol/HemReward.json';
+import abi from '@artifacts/contracts/NECTR.sol/NECTR.json';
 
 const toWei = (num: number) => ethers.parseEther(num.toString());
 const fromWei = (num: string | number | null): string => {
@@ -21,66 +21,71 @@ const getEthereumContract = async () => {
   if (accounts?.length > 0) {
     const provider = new ethers.BrowserProvider(ethereum);
     const signer = await provider.getSigner();
-    const contract = new ethers.Contract(address.HemReward, abi.abi, signer);
+    const contract = new ethers.Contract(address.NECTR, abi.abi, signer);
     return contract;
   } else {
     const provider = new ethers.JsonRpcProvider(
-      process.env.NEXT_PUBLIC_RPC_URL
+      process.env.NEXT_PUBLIC_MUMBAI_RPC_URL || 'https://polygon-mumbai.g.alchemy.com/v2/demo'
     );
-    const contract = new ethers.Contract(address.HemReward, abi.abi, provider);
+    const contract = new ethers.Contract(address.NECTR, abi.abi, provider);
     return contract;
   }
 };
 
-const distributeReward = async (user: string, amount: number): Promise<any> => {
+// Staking functions
+const stakeTokens = async (amount: number): Promise<any> => {
   if (!ethereum) {
     return Promise.reject(new Error("Please install a wallet provider"));
   }
 
   try {
     const contract = await getEthereumContract();
-    tx = await contract.distributeReward(user, toWei(amount));
+    tx = await contract.stake(toWei(amount));
     await tx.wait();
     return Promise.resolve(tx);
-  } catch (error) {
-    return Promise.reject(error);
+  } catch (error: any) {
+    console.error("Staking error:", error);
+    return Promise.reject(error.message || "Staking failed");
   }
 };
 
-const setReferral = async (referrer: string): Promise<any> => {
+const unstakeTokens = async (amount: number): Promise<any> => {
   if (!ethereum) {
     return Promise.reject(new Error("Please install a wallet provider"));
   }
 
   try {
     const contract = await getEthereumContract();
-    tx = await contract.setReferral(referrer);
+    tx = await contract.unstake(toWei(amount));
     await tx.wait();
     return Promise.resolve(tx);
-  } catch (error) {
-    return Promise.reject(error);
+  } catch (error: any) {
+    console.error("Unstaking error:", error);
+    return Promise.reject(error.message || "Unstaking failed");
   }
 };
 
-const claimReferralReward = async (referredUser: string): Promise<any> => {
+const claimStakingRewards = async (): Promise<any> => {
   if (!ethereum) {
     return Promise.reject(new Error("Please install a wallet provider"));
   }
 
   try {
     const contract = await getEthereumContract();
-    const tx = await contract.claimReferralReward(referredUser);
+    tx = await contract.claimRewards();
     await tx.wait();
     return Promise.resolve(tx);
-  } catch (error) {
-    return Promise.reject(error);
+  } catch (error: any) {
+    console.error("Claim rewards error:", error);
+    return Promise.reject(error.message || "Claiming rewards failed");
   }
 };
 
+// View functions
 const getMaxSupply = async (): Promise<string> => {
   try {
     const contract = await getEthereumContract();
-    const maxSupply = await contract.getMaxSupply();
+    const maxSupply = await contract.maxSupply();
     return fromWei(maxSupply);
   } catch (error) {
     console.error("Error getting max supply:", error);
@@ -88,50 +93,85 @@ const getMaxSupply = async (): Promise<string> => {
   }
 };
 
-const getTotalMinted = async (): Promise<string> => {
+const getTotalSupply = async (): Promise<string> => {
   try {
     const contract = await getEthereumContract();
-    const totalMinted = await contract.getTotalMinted();
-    return fromWei(totalMinted);
+    const totalSupply = await contract.totalSupply();
+    return fromWei(totalSupply);
   } catch (error) {
-    console.error("Error getting total minted:", error);
+    console.error("Error getting total supply:", error);
     return "0";
   }
 };
 
-const getTotalClaimed = async (): Promise<string> => {
+const getTotalStaked = async (): Promise<string> => {
   try {
     const contract = await getEthereumContract();
-    const totalClaimed = await contract.getTotalClaimed();
-    return fromWei(totalClaimed);
+    const totalStaked = await contract.getTotalStaked();
+    return fromWei(totalStaked);
   } catch (error) {
-    console.error("Error getting total claimed:", error);
+    console.error("Error getting total staked:", error);
     return "0";
   }
 };
 
-const getClaimedRewards = async (address: string): Promise<string> => {
+const getUserStakedAmount = async (address: string): Promise<string> => {
   try {
     const contract = await getEthereumContract();
-    const claimed = await contract.getClaimedRewards(address);
-    return fromWei(claimed);
+    const stakedAmount = await contract.getUserStakedAmount(address);
+    return fromWei(stakedAmount);
   } catch (error) {
-    console.error("Error getting claimed rewards:", error);
+    console.error("Error getting user staked amount:", error);
     return "0";
   }
 };
 
-const mintTokens = async (amount?: number): Promise<any> => {
+const getPendingRewards = async (address: string): Promise<string> => {
+  try {
+    const contract = await getEthereumContract();
+    const pendingRewards = await contract.getPendingRewards(address);
+    return fromWei(pendingRewards);
+  } catch (error) {
+    console.error("Error getting pending rewards:", error);
+    return "0";
+  }
+};
+
+const getStakeInfo = async (address: string): Promise<{amount: string, timestamp: number, rewardRate: number}> => {
+  try {
+    const contract = await getEthereumContract();
+    const [amount, timestamp, rewardRate] = await contract.getStakeInfo(address);
+    return {
+      amount: fromWei(amount),
+      timestamp: Number(timestamp),
+      rewardRate: Number(rewardRate)
+    };
+  } catch (error) {
+    console.error("Error getting stake info:", error);
+    return { amount: "0", timestamp: 0, rewardRate: 0 };
+  }
+};
+
+const getTokenBalance = async (address: string): Promise<string> => {
+  try {
+    const contract = await getEthereumContract();
+    const balance = await contract.balanceOf(address);
+    return fromWei(balance);
+  } catch (error) {
+    console.error("Error getting token balance:", error);
+    return "0";
+  }
+};
+
+// Owner functions (for testing/demo purposes)
+const mintTokens = async (to: string, amount: number): Promise<any> => {
   if (!ethereum) {
     return Promise.reject(new Error("Please install a wallet provider"));
   }
 
   try {
     const contract = await getEthereumContract();
-
-    const mintAmount = toWei(amount || 100);
-
-    tx = await contract.mint(mintAmount);
+    tx = await contract.mint(to, toWei(amount));
     await tx.wait();
     return Promise.resolve(tx);
   } catch (error: any) {
@@ -140,31 +180,18 @@ const mintTokens = async (amount?: number): Promise<any> => {
   }
 };
 
-const burnTokens = async (amount: number): Promise<any> => {
-  if (!ethereum) {
-    return Promise.reject(new Error("Please install a wallet provider"));
-  }
-
-  try {
-    const contract = await getEthereumContract();
-    tx = await contract.burn(toWei(amount));
-    await tx.wait();
-    return Promise.resolve(tx);
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};
-
 export {
-  distributeReward,
-  setReferral,
-  claimReferralReward,
+  stakeTokens,
+  unstakeTokens,
+  claimStakingRewards,
   getMaxSupply,
-  getTotalMinted,
-  getTotalClaimed,
-  getClaimedRewards,
+  getTotalSupply,
+  getTotalStaked,
+  getUserStakedAmount,
+  getPendingRewards,
+  getStakeInfo,
+  getTokenBalance,
   mintTokens,
-  burnTokens,
   toWei,
   fromWei,
 };

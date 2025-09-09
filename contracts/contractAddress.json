@@ -1,3 +1,5 @@
 {
-  "HemReward": "0xCFdEb11a024762adDdA2104A64834c0579ab9aa1"
+  "NECTR": "0x0000000000000000000000000000000000000000",
+  "network": "mumbai",
+  "chainId": 80001
 }
