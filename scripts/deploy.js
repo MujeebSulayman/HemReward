@@ -23,12 +23,13 @@ async function main() {
 
     // Verify deployment
     const totalSupply = await nectr.totalSupply();
-    const maxSupply = await nectr.maxSupply();
-    const stakingRewardRate = await nectr.stakingRewardRate();
+    const maxSupply = await nectr.MAX_SUPPLY();
+    const contractStats = await nectr.getContractStats();
     
     console.log("Total Supply:", ethers.formatEther(totalSupply));
     console.log("Max Supply:", ethers.formatEther(maxSupply));
-    console.log("Staking Reward Rate:", stakingRewardRate.toString(), "%");
+    console.log("Total Staked:", ethers.formatEther(contractStats.totalStaked));
+    console.log("Total Rewards Distributed:", ethers.formatEther(contractStats.totalRewards));
 
     const fs = require("fs");
     const contractsDir = __dirname + "/../contracts";
