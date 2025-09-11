@@ -419,6 +419,181 @@ const claimFaucetTokens = async (): Promise<any> => {
   }
 };
 
+// Admin Functions
+const addAuthorizedMinter = async (minter: string): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.addAuthorizedMinter(minter);
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Add authorized minter error:", error);
+    return Promise.reject(error.message || "Failed to add authorized minter");
+  }
+};
+
+const removeAuthorizedMinter = async (minter: string): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.removeAuthorizedMinter(minter);
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Remove authorized minter error:", error);
+    return Promise.reject(error.message || "Failed to remove authorized minter");
+  }
+};
+
+const pauseStaking = async (): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.pauseStaking();
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Pause staking error:", error);
+    return Promise.reject(error.message || "Failed to pause staking");
+  }
+};
+
+const unpauseStaking = async (): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.unpauseStaking();
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Unpause staking error:", error);
+    return Promise.reject(error.message || "Failed to unpause staking");
+  }
+};
+
+const setMinStakeAmount = async (amount: number): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.setMinStakeAmount(toWei(amount));
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Set min stake amount error:", error);
+    return Promise.reject(error.message || "Failed to set minimum stake amount");
+  }
+};
+
+const setMaxStakeAmount = async (amount: number): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.setMaxStakeAmount(toWei(amount));
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Set max stake amount error:", error);
+    return Promise.reject(error.message || "Failed to set maximum stake amount");
+  }
+};
+
+const updateTierApy = async (tier: number, newApyRate: number): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.updateTierApy(tier, newApyRate);
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Update tier APY error:", error);
+    return Promise.reject(error.message || "Failed to update tier APY");
+  }
+};
+
+const setBlacklist = async (account: string, isBlacklisted: boolean): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.setBlacklist(account, isBlacklisted);
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Set blacklist error:", error);
+    return Promise.reject(error.message || "Failed to update blacklist");
+  }
+};
+
+const emergencyWithdraw = async (amount: number): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.emergencyWithdraw(toWei(amount));
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Emergency withdraw error:", error);
+    return Promise.reject(error.message || "Failed to perform emergency withdraw");
+  }
+};
+
+// Check if address is authorized minter
+const isAuthorizedMinter = async (address: string): Promise<boolean> => {
+  if (!ethereum) {
+    return false;
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    return await contract.authorizedMinters(address);
+  } catch (error: any) {
+    console.error("Error checking authorized minter:", error);
+    return false;
+  }
+};
+
+// Check if address is blacklisted
+const isBlacklisted = async (address: string): Promise<boolean> => {
+  if (!ethereum) {
+    return false;
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    return await contract.blacklisted(address);
+  } catch (error: any) {
+    console.error("Error checking blacklist:", error);
+    return false;
+  }
+};
+
 export {
   stakeTokens,
   unstakeTokens,
@@ -449,6 +624,18 @@ export {
   isPaused,
   // Faucet function
   claimFaucetTokens,
+  // Admin functions
+  addAuthorizedMinter,
+  removeAuthorizedMinter,
+  pauseStaking,
+  unpauseStaking,
+  setMinStakeAmount,
+  setMaxStakeAmount,
+  updateTierApy,
+  setBlacklist,
+  emergencyWithdraw,
+  isAuthorizedMinter,
+  isBlacklisted,
   toWei,
   fromWei,
 };

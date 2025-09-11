@@ -26,7 +26,7 @@ export interface ReferralStruct {
   timestamp: number
 }
 
-export interface IHemReward {
+export interface INECTR {
   maxSupply: () => Promise<bigint>;
   totalMinted: () => Promise<bigint>;
   mint: (to: string, amount: bigint) => Promise<ethers.ContractTransaction>;
@@ -46,7 +46,7 @@ export interface Web3State {
   balance: string;
   loading: boolean;
   error: string | null;
-  contract: IHemReward | null;
+  contract: INECTR | null;
 }
 
 export interface TransactionResult {

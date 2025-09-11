@@ -15,9 +15,9 @@ export const formatTokenAmount = (value: string): string => {
   
   const formattedInteger = groups.join(',');
   if (parts[1]) {
-    return `${formattedInteger}.${parts[1]} HMR`;
+    return `${formattedInteger}.${parts[1]} NECTR`;
   }
-  return `${formattedInteger} HMR`;
+  return `${formattedInteger} NECTR`;
 };
 
 export const shortenAddress = (address: string): string => {
@@ -27,7 +27,7 @@ export const shortenAddress = (address: string): string => {
 
 export const parseTokenAmount = (amount: string): number => {
   try {
-    const cleanAmount = amount.replace(/,/g, '').replace(' HMR', '');
+    const cleanAmount = amount.replace(/,/g, '').replace(' NECTR', '');
     return parseFloat(cleanAmount);
   } catch (error) {
     console.error('Error parsing token amount:', error);
