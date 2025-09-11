@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import address from "../contracts/contractAddress.json";
-import abi from '../artifacts/contracts/NECTR.sol/NECTR.json';
+import abi from '../contracts/NECTR_ABI.json';
 
 const toWei = (num: number) => ethers.parseEther(num.toString());
 const fromWei = (num: string | number | null): string => {
@@ -21,13 +21,13 @@ const getEthereumContract = async () => {
   if (accounts?.length > 0) {
     const provider = new ethers.BrowserProvider(ethereum);
     const signer = await provider.getSigner();
-    const contract = new ethers.Contract(address.NECTR, abi.abi, signer);
+    const contract = new ethers.Contract(address.NECTR, abi, signer);
     return contract;
   } else {
     const provider = new ethers.JsonRpcProvider(
       process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://sepolia.infura.io/v3/your-project-id'
     );
-    const contract = new ethers.Contract(address.NECTR, abi.abi, provider);
+    const contract = new ethers.Contract(address.NECTR, abi, provider);
     return contract;
   }
 };
