@@ -1,8 +1,41 @@
 import Image from "next/image";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { getContractStats } from "../services/blockchain";
 
 const Hero = () => {
+  const [contractStats, setContractStats] = useState({
+    totalSupply: "0",
+    maxSupply: "0",
+    totalStaked: "0",
+    totalRewards: "0"
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await getContractStats();
+        setContractStats(stats);
+      } catch (error) {
+        console.error("Error fetching contract stats:", error);
+      }
+    };
+
+    fetchStats();
+    
+    // Refresh stats every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatLargeNumber = (value: string) => {
+    const num = parseFloat(value);
+    if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B`;
+    if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+    if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
   return (
     <main className="relative w-full px-4 sm:px-6 lg:px-32 pt-24 sm:pt-32 pb-12 sm:pb-16">
       <div className="max-w-[1440px] mx-auto">
@@ -68,12 +101,13 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-8 mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-purple-700/30"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-purple-700/30"
             >
               {[
-                { value: "100M", label: "NECTR Tokens" },
-                { value: "10%", label: "Staking APY" },
-                { value: "1B", label: "Max Supply" },
+                { value: formatLargeNumber(contractStats.totalSupply), label: "Total Supply" },
+                { value: formatLargeNumber(contractStats.totalStaked), label: "Total Staked" },
+                { value: "5-15%", label: "Staking APY" },
+                { value: formatLargeNumber(contractStats.maxSupply), label: "Max Supply" },
               ].map((stat, index) => (
                 <div key={index} className="text-center px-2">
                   <div className="text-xl sm:text-2xl font-bold text-white mb-1">

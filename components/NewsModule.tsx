@@ -1,105 +1,53 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { fetchLiveNews, fetchNewsByCategory, NewsWebSocket, NewsArticle } from "../services/news";
 
-interface NewsArticle {
-  id: string;
-  title: string;
-  summary: string;
-  content: string;
-  author: string;
-  publishedAt: string;
-  category: string;
-  imageUrl: string;
-  readTime: string;
-  source: string;
-}
+// NewsArticle interface is now imported from news service
 
 const NewsModule: React.FC = () => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
-
-  // Mock news data for demo purposes
-  const mockArticles: NewsArticle[] = [
-    {
-      id: "1",
-      title: "NECTR Token Launches Revolutionary Healthcare Rewards Platform",
-      summary: "The NECTR ecosystem introduces a groundbreaking approach to incentivizing healthy behaviors through blockchain technology.",
-      content: "The NECTR Token ecosystem has officially launched, bringing together healthcare providers, patients, and wellness enthusiasts in a revolutionary rewards system. The platform leverages blockchain technology to create transparent, secure, and efficient health reward mechanisms that benefit all participants.",
-      author: "Sarah Johnson",
-      publishedAt: "2024-01-15T10:30:00Z",
-      category: "blockchain",
-      imageUrl: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop",
-      readTime: "5 min read",
-      source: "HealthTech News"
-    },
-    {
-      id: "2",
-      title: "Staking Rewards Reach 10% APY as NECTR Adoption Grows",
-      summary: "Early adopters of NECTR staking are seeing impressive returns as the platform gains traction in the healthcare sector.",
-      content: "NECTR token stakers are enjoying substantial rewards as the platform's adoption continues to grow. With a current APY of 10%, early participants are seeing significant returns on their staked tokens. The staking mechanism is designed to encourage long-term participation in the ecosystem.",
-      author: "Michael Chen",
-      publishedAt: "2024-01-14T14:20:00Z",
-      category: "blockchain",
-      imageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop",
-      readTime: "4 min read",
-      source: "Crypto Daily"
-    },
-    {
-      id: "3",
-      title: "Major Healthcare Providers Partner with NECTR for Patient Rewards",
-      summary: "Leading hospitals and clinics are integrating NECTR rewards into their patient care programs.",
-      content: "Several major healthcare providers have announced partnerships with NECTR to integrate token rewards into their patient care programs. This collaboration aims to improve patient engagement and health outcomes through incentivized wellness programs.",
-      author: "Dr. Emily Rodriguez",
-      publishedAt: "2024-01-13T09:15:00Z",
-      category: "healthcare",
-      imageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=250&fit=crop",
-      readTime: "6 min read",
-      source: "Medical Innovation"
-    },
-    {
-      id: "4",
-      title: "NECTR Token Listed on Major Exchanges",
-      summary: "The NECTR token is now available for trading on several prominent cryptocurrency exchanges.",
-      content: "NECTR token has been successfully listed on major cryptocurrency exchanges, providing increased liquidity and accessibility for investors and users. The listing marks a significant milestone in the token's journey toward mainstream adoption.",
-      author: "Alex Thompson",
-      publishedAt: "2024-01-12T16:45:00Z",
-      category: "blockchain",
-      imageUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=250&fit=crop",
-      readTime: "3 min read",
-      source: "Crypto Exchange News"
-    },
-    {
-      id: "5",
-      title: "Wellness Programs Show 40% Improvement in Patient Engagement",
-      summary: "Early data from NECTR-powered wellness programs demonstrates significant improvements in patient participation.",
-      content: "Preliminary data from healthcare providers using NECTR rewards shows a 40% increase in patient engagement with wellness programs. The token-based incentive system is proving effective in motivating patients to maintain healthy habits and attend regular checkups.",
-      author: "Dr. James Wilson",
-      publishedAt: "2024-01-11T11:30:00Z",
-      category: "healthcare",
-      imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=250&fit=crop",
-      readTime: "7 min read",
-      source: "Healthcare Analytics"
-    }
-  ];
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [wsConnection, setWsConnection] = useState<NewsWebSocket | null>(null);
 
   const categories = [
-    { id: "all", name: "All News", count: mockArticles.length },
-    { id: "blockchain", name: "Blockchain", count: mockArticles.filter(a => a.category === "blockchain").length },
-    { id: "healthcare", name: "Healthcare", count: mockArticles.filter(a => a.category === "healthcare").length },
+    { id: "all", name: "All News", count: articles.length },
+    { id: "blockchain", name: "Blockchain", count: articles.filter(a => a.category === "blockchain").length },
+    { id: "healthcare", name: "Healthcare", count: articles.filter(a => a.category === "healthcare").length },
   ];
 
   useEffect(() => {
+    // Initial fetch
     const fetchArticles = async () => {
       setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setArticles(mockArticles);
-      setLoading(false);
+      try {
+        const liveNews = await fetchLiveNews();
+        setArticles(liveNews);
+        setLastUpdate(new Date());
+      } catch (error) {
+        console.error('Error fetching news:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchArticles();
+
+    // Set up real-time WebSocket connection
+    const ws = new NewsWebSocket();
+    ws.onUpdate((newArticles) => {
+      setArticles(newArticles);
+      setLastUpdate(new Date());
+    });
+    ws.connect();
+    setWsConnection(ws);
+
+    // Cleanup
+    return () => {
+      ws.disconnect();
+    };
   }, []);
 
   const filteredArticles = selectedCategory === "all" 
@@ -113,6 +61,47 @@ const NewsModule: React.FC = () => {
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  const formatLastUpdate = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const liveNews = await fetchLiveNews();
+      setArticles(liveNews);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error refreshing news:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCategoryChange = async (category: string) => {
+    setSelectedCategory(category);
+    setLoading(true);
+    try {
+      const news = category === "all" 
+        ? await fetchLiveNews()
+        : await fetchNewsByCategory(category);
+      setArticles(news);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error fetching category news:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -222,11 +211,29 @@ const NewsModule: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-extrabold text-white mb-4">
-            Latest News & Updates
+            Live News & Updates
           </h1>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Stay informed about the latest developments in the NECTR ecosystem and healthcare blockchain innovation
           </p>
+          
+          {/* Real-time indicator */}
+          <div className="mt-4 flex items-center justify-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-400">Live updates</span>
+            </div>
+            <div className="text-sm text-gray-500">
+              Last updated: {formatLastUpdate(lastUpdate)}
+            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
         </div>
 
         {/* Category Filter */}
@@ -234,7 +241,7 @@ const NewsModule: React.FC = () => {
           {categories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => handleCategoryChange(category.id)}
               className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
                 selectedCategory === category.id
                   ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"

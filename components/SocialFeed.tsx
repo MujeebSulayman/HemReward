@@ -1,86 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { fetchRealTwitterData, fetchTweetsByHashtag, TwitterWebSocket, Tweet } from "../services/twitter";
 
-interface Tweet {
-  id: string;
-  text: string;
-  author: string;
-  username: string;
-  timestamp: string;
-  likes: number;
-  retweets: number;
-  avatar: string;
-}
+// Tweet interface is now imported from twitter service
 
 const SocialFeed: React.FC = () => {
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Mock Twitter data for demo purposes
-  const mockTweets: Tweet[] = [
-    {
-      id: "1",
-      text: "🚀 Excited to announce the NECTR Token Ecosystem! Join us in revolutionizing healthcare rewards with blockchain technology. #NECTR #Web3 #Healthcare",
-      author: "NECTR Official",
-      username: "@NECTRToken",
-      timestamp: "2h",
-      likes: 1247,
-      retweets: 89,
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-    },
-    {
-      id: "2",
-      text: "💡 Did you know? NECTR tokens can be earned by completing health checkups, maintaining fitness goals, and participating in wellness programs. Your health = your wealth! 💪",
-      author: "HealthTech News",
-      username: "@HealthTechNews",
-      timestamp: "4h",
-      likes: 892,
-      retweets: 156,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
-    },
-    {
-      id: "3",
-      text: "🔥 The staking rewards for NECTR tokens are now live! Stake your tokens and earn up to 10% APY. Don't miss out on this opportunity to grow your health rewards! 📈",
-      author: "DeFi Updates",
-      username: "@DeFiUpdates",
-      timestamp: "6h",
-      likes: 2156,
-      retweets: 234,
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face"
-    },
-    {
-      id: "4",
-      text: "🏥 Partnering with leading healthcare providers to integrate NECTR rewards into their systems. Soon, you'll be able to earn tokens for every doctor visit! 🩺",
-      author: "NECTR Official",
-      username: "@NECTRToken",
-      timestamp: "8h",
-      likes: 1876,
-      retweets: 198,
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-    },
-    {
-      id: "5",
-      text: "🌱 Sustainability meets healthcare! NECTR is committed to reducing healthcare costs while incentivizing healthy behaviors. Join the movement! 🌍",
-      author: "Green Health",
-      username: "@GreenHealth",
-      timestamp: "12h",
-      likes: 743,
-      retweets: 67,
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face"
-    }
-  ];
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [wsConnection, setWsConnection] = useState<TwitterWebSocket | null>(null);
 
   useEffect(() => {
-    // Simulate API call
+    // Initial fetch
     const fetchTweets = async () => {
       setLoading(true);
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setTweets(mockTweets);
-      setLoading(false);
+      try {
+        const liveTweets = await fetchRealTwitterData();
+        setTweets(liveTweets);
+        setLastUpdate(new Date());
+      } catch (error) {
+        console.error('Error fetching tweets:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTweets();
+
+    // Set up real-time WebSocket connection
+    const ws = new TwitterWebSocket();
+    ws.onUpdate((newTweets) => {
+      setTweets(newTweets);
+      setLastUpdate(new Date());
+    });
+    ws.connect();
+    setWsConnection(ws);
+
+    // Cleanup
+    return () => {
+      ws.disconnect();
+    };
   }, []);
 
   const formatNumber = (num: number) => {
@@ -88,6 +47,31 @@ const SocialFeed: React.FC = () => {
       return (num / 1000).toFixed(1) + 'K';
     }
     return num.toString();
+  };
+
+  const formatLastUpdate = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const liveTweets = await fetchRealTwitterData();
+      setTweets(liveTweets);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error refreshing tweets:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const TweetCard: React.FC<{ tweet: Tweet; index: number }> = ({ tweet, index }) => (
@@ -106,6 +90,11 @@ const SocialFeed: React.FC = () => {
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
             <h3 className="font-semibold text-white">{tweet.author}</h3>
+            {tweet.verified && (
+              <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+              </svg>
+            )}
             <span className="text-gray-400 text-sm">{tweet.username}</span>
             <span className="text-gray-500 text-sm">·</span>
             <span className="text-gray-500 text-sm">{tweet.timestamp}</span>
@@ -140,11 +129,29 @@ const SocialFeed: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-extrabold text-white mb-4">
-            Social Media Feed
+            Live Social Media Feed
           </h1>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Stay updated with the latest NECTR news and community discussions
           </p>
+          
+          {/* Real-time indicator */}
+          <div className="mt-4 flex items-center justify-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-400">Live updates</span>
+            </div>
+            <div className="text-sm text-gray-500">
+              Last updated: {formatLastUpdate(lastUpdate)}
+            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

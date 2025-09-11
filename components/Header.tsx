@@ -5,10 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CgMenuLeft } from "react-icons/cg";
 import { FaTimes } from "react-icons/fa";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
+import { getTokenBalance } from "../services/blockchain";
 
 const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
+  const [tokenBalance, setTokenBalance] = useState<string>("0");
+  const { address, isConnected } = useAccount();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,6 +21,25 @@ const Header: React.FC = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const fetchTokenBalance = async () => {
+      if (address) {
+        try {
+          const balance = await getTokenBalance(address);
+          setTokenBalance(balance);
+        } catch (error) {
+          console.error("Error fetching token balance:", error);
+        }
+      }
+    };
+
+    fetchTokenBalance();
+    
+    // Refresh balance every 30 seconds
+    const interval = setInterval(fetchTokenBalance, 30000);
+    return () => clearInterval(interval);
+  }, [address]);
 
   return (
     <motion.header
@@ -41,7 +64,7 @@ const Header: React.FC = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                Hemswap
+                NECTR
               </motion.span>
             </Link>
           </div>
@@ -76,7 +99,15 @@ const Header: React.FC = () => {
               Referrals
             </Link>
           </nav>
-          <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
+          <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0 space-x-4">
+            {isConnected && (
+              <div className="bg-purple-900/30 border border-purple-700/50 rounded-lg px-4 py-2">
+                <div className="text-sm text-purple-300">NECTR Balance</div>
+                <div className="text-lg font-bold text-white">
+                  {parseFloat(tokenBalance).toFixed(2)} NECTR
+                </div>
+              </div>
+            )}
             <ConnectButton
               showBalance={false}
               accountStatus={{
@@ -102,7 +133,7 @@ const Header: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <Link href={"/"} className="text-lg font-normal text-white">
-                      Hemswap
+                      NECTR
                     </Link>
                   </div>
                   <div className="-mr-2">

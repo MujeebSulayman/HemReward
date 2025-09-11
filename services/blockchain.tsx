@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import address from "../contracts/contractAddress.json";
-import abi from '@artifacts/contracts/NECTR.sol/NECTR.json';
+import abi from '../artifacts/contracts/NECTR.sol/NECTR.json';
 
 const toWei = (num: number) => ethers.parseEther(num.toString());
 const fromWei = (num: string | number | null): string => {
@@ -85,7 +85,7 @@ const claimStakingRewards = async (): Promise<any> => {
 const getMaxSupply = async (): Promise<string> => {
   try {
     const contract = await getEthereumContract();
-    const maxSupply = await contract.maxSupply();
+    const maxSupply = await contract.MAX_SUPPLY();
     return fromWei(maxSupply);
   } catch (error) {
     console.error("Error getting max supply:", error);
@@ -245,20 +245,79 @@ const getContractStats = async (): Promise<{
 };
 
 // Owner functions (for testing/demo purposes)
-const mintTokens = async (to: string, amount: number, reason: string = "Demo minting"): Promise<any> => {
+const mintTokens = async (amount: number): Promise<any> => {
   if (!ethereum) {
     return Promise.reject(new Error("Please install a wallet provider"));
   }
 
   try {
     const contract = await getEthereumContract();
-    tx = await contract.mint(to, toWei(amount), reason);
+    const accounts = await ethereum.request({ method: "eth_accounts" });
+    tx = await contract.mint(accounts[0], toWei(amount), "Demo minting");
     await tx.wait();
     return Promise.resolve(tx);
   } catch (error: any) {
     console.error("Minting error:", error);
     return Promise.reject(error.message || "Minting failed");
   }
+};
+
+// Additional functions for compatibility
+const getTotalMinted = async (): Promise<string> => {
+  return getTotalSupply();
+};
+
+const getClaimedRewards = async (address: string): Promise<string> => {
+  try {
+    const contract = await getEthereumContract();
+    const stakeInfo = await contract.getStakeInfo(address);
+    return fromWei(stakeInfo.totalRewardsClaimed);
+  } catch (error) {
+    console.error("Error getting claimed rewards:", error);
+    return "0";
+  }
+};
+
+const burnTokens = async (amount: number): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.transfer("0x000000000000000000000000000000000000dEaD", toWei(amount));
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Burning error:", error);
+    return Promise.reject(error.message || "Burning failed");
+  }
+};
+
+const distributeReward = async (recipient: string, amount: number): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.transfer(recipient, toWei(amount));
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Distribution error:", error);
+    return Promise.reject(error.message || "Distribution failed");
+  }
+};
+
+const setReferral = async (referrer: string): Promise<any> => {
+  // Mock function - not implemented in current contract
+  return Promise.resolve({ hash: "0xmock" });
+};
+
+const claimReferralReward = async (user: string): Promise<any> => {
+  // Mock function - not implemented in current contract
+  return Promise.resolve({ hash: "0xmock" });
 };
 
 export {
@@ -276,6 +335,12 @@ export {
   getTierInfo,
   getContractStats,
   mintTokens,
+  getTotalMinted,
+  getClaimedRewards,
+  burnTokens,
+  distributeReward,
+  setReferral,
+  claimReferralReward,
   toWei,
   fromWei,
 };

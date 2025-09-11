@@ -57,13 +57,18 @@ const StakingInterface: React.FC = () => {
   const [userStaked, setUserStaked] = useState<string>("0");
   const [pendingRewards, setPendingRewards] = useState<string>("0");
   const [tokenBalance, setTokenBalance] = useState<string>("0");
-  const [stakeInfo, setStakeInfo] = useState<{amount: string, timestamp: number, rewardRate: number}>({
+  const [stakeInfo, setStakeInfo] = useState<{amount: string, timestamp: number, tier: number}>({
     amount: "0",
     timestamp: 0,
-    rewardRate: 0
+    tier: 0
   });
   const [loading, setLoading] = useState<boolean>(false);
   const [claimLoading, setClaimLoading] = useState<boolean>(false);
+  const [transactionStatus, setTransactionStatus] = useState<{
+    type: string;
+    status: 'pending' | 'confirmed' | 'failed' | null;
+    hash?: string;
+  }>({ type: '', status: null });
 
   useEffect(() => {
     const fetchStakingData = async () => {
@@ -126,7 +131,13 @@ const StakingInterface: React.FC = () => {
 
     try {
       setLoading(true);
-      await stakeTokens(amount);
+      setTransactionStatus({ type: 'stake', status: 'pending' });
+      
+      const tx = await stakeTokens(amount);
+      setTransactionStatus({ type: 'stake', status: 'pending', hash: tx.hash });
+      
+      await tx.wait();
+      setTransactionStatus({ type: 'stake', status: 'confirmed', hash: tx.hash });
       toast.success(`Successfully staked ${amount} NECTR tokens`);
       
       // Refresh data
@@ -143,6 +154,7 @@ const StakingInterface: React.FC = () => {
       setStakeInfo(updatedStakeInfo);
       setStakeAmount("");
     } catch (error: any) {
+      setTransactionStatus({ type: 'stake', status: 'failed' });
       const errorMessage = reportError(error);
       toast.error(errorMessage, {
         position: "top-right",
@@ -150,6 +162,7 @@ const StakingInterface: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      setTimeout(() => setTransactionStatus({ type: '', status: null }), 5000);
     }
   };
 
@@ -181,7 +194,13 @@ const StakingInterface: React.FC = () => {
 
     try {
       setLoading(true);
-      await unstakeTokens(amount);
+      setTransactionStatus({ type: 'unstake', status: 'pending' });
+      
+      const tx = await unstakeTokens(amount);
+      setTransactionStatus({ type: 'unstake', status: 'pending', hash: tx.hash });
+      
+      await tx.wait();
+      setTransactionStatus({ type: 'unstake', status: 'confirmed', hash: tx.hash });
       toast.success(`Successfully unstaked ${amount} NECTR tokens`);
       
       // Refresh data
@@ -198,6 +217,7 @@ const StakingInterface: React.FC = () => {
       setStakeInfo(updatedStakeInfo);
       setUnstakeAmount("");
     } catch (error: any) {
+      setTransactionStatus({ type: 'unstake', status: 'failed' });
       const errorMessage = reportError(error);
       toast.error(errorMessage, {
         position: "top-right",
@@ -205,6 +225,7 @@ const StakingInterface: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      setTimeout(() => setTransactionStatus({ type: '', status: null }), 5000);
     }
   };
 
@@ -227,7 +248,13 @@ const StakingInterface: React.FC = () => {
 
     try {
       setClaimLoading(true);
-      await claimStakingRewards();
+      setTransactionStatus({ type: 'claim', status: 'pending' });
+      
+      const tx = await claimStakingRewards();
+      setTransactionStatus({ type: 'claim', status: 'pending', hash: tx.hash });
+      
+      await tx.wait();
+      setTransactionStatus({ type: 'claim', status: 'confirmed', hash: tx.hash });
       toast.success(`Successfully claimed ${pendingRewards} NECTR rewards`);
       
       // Refresh data
@@ -239,6 +266,7 @@ const StakingInterface: React.FC = () => {
       setPendingRewards(updatedPendingRewards);
       setTokenBalance(updatedTokenBalance);
     } catch (error: any) {
+      setTransactionStatus({ type: 'claim', status: 'failed' });
       const errorMessage = reportError(error);
       toast.error(errorMessage, {
         position: "top-right",
@@ -246,6 +274,7 @@ const StakingInterface: React.FC = () => {
       });
     } finally {
       setClaimLoading(false);
+      setTimeout(() => setTransactionStatus({ type: '', status: null }), 5000);
     }
   };
 
@@ -255,6 +284,41 @@ const StakingInterface: React.FC = () => {
     const days = Math.floor(duration / 86400);
     const hours = Math.floor((duration % 86400) / 3600);
     return `${days}d ${hours}h`;
+  };
+
+  const getTierName = (tier: number) => {
+    const tierNames = ["Bronze", "Silver", "Gold", "Platinum"];
+    return tierNames[tier] || "Unknown";
+  };
+
+  const getTransactionStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-400';
+      case 'confirmed': return 'text-green-400';
+      case 'failed': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getTransactionStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending': return (
+        <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      );
+      case 'confirmed': return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      );
+      case 'failed': return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      );
+      default: return null;
+    }
   };
 
   return (
@@ -269,6 +333,27 @@ const StakingInterface: React.FC = () => {
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Stake your NECTR tokens to earn rewards. The longer you stake, the more rewards you earn!
           </p>
+          
+          {/* Transaction Status */}
+          {transactionStatus.status && (
+            <div className={`mt-6 p-4 rounded-lg border ${
+              transactionStatus.status === 'pending' ? 'bg-yellow-900/30 border-yellow-700/50' :
+              transactionStatus.status === 'confirmed' ? 'bg-green-900/30 border-green-700/50' :
+              'bg-red-900/30 border-red-700/50'
+            }`}>
+              <div className="flex items-center justify-center space-x-3">
+                {getTransactionStatusIcon(transactionStatus.status)}
+                <span className={`font-semibold ${getTransactionStatusColor(transactionStatus.status)}`}>
+                  {transactionStatus.type.charAt(0).toUpperCase() + transactionStatus.type.slice(1)} transaction {transactionStatus.status}
+                </span>
+              </div>
+              {transactionStatus.hash && (
+                <p className="text-sm text-gray-400 mt-2">
+                  Hash: {transactionStatus.hash.slice(0, 10)}...{transactionStatus.hash.slice(-8)}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -338,8 +423,8 @@ const StakingInterface: React.FC = () => {
                     <p className="text-lg font-semibold text-white">{getStakingDuration()}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400">Reward Rate</p>
-                    <p className="text-lg font-semibold text-white">{stakeInfo.rewardRate}% APY</p>
+                    <p className="text-sm text-gray-400">Tier</p>
+                    <p className="text-lg font-semibold text-white">{getTierName(stakeInfo.tier)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Staked Amount</p>

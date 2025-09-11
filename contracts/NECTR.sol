@@ -86,7 +86,7 @@ contract NECTR is ERC20, Ownable, ReentrancyGuard, Pausable {
         bool isBlacklisted
     );
 
-    constructor() ERC20("NECTR Token", "NECTR") Ownable(msg.sender) {
+    constructor() ERC20("NECTR Token", "NECTR") Ownable() {
         _mint(msg.sender, INITIAL_SUPPLY);
         stakingStartTime = block.timestamp;
         _initializeTiers();
@@ -282,7 +282,7 @@ contract NECTR is ERC20, Ownable, ReentrancyGuard, Pausable {
         return stakes[user].amount;
     }
 
-    function getTierInfo(StakeTier tier) external view returns (TierInfo memory tierInfo) {
+    function getTierInfo(StakeTier tier) external view returns (TierInfo memory) {
         return tierInfo[tier];
     }
 
@@ -338,13 +338,9 @@ contract NECTR is ERC20, Ownable, ReentrancyGuard, Pausable {
         emit EmergencyWithdraw(owner(), amount);
     }
 
-    function _update(address from, address to, uint256 value) internal override {
-        require(!blacklisted[from] && !blacklisted[to], "Blacklisted address");
-        super._update(from, to, value);
-    }
-
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
-        super._beforeTokenTransfer(from, to, amount);
+        require(!blacklisted[from] && !blacklisted[to], "Blacklisted address");
         require(!paused() || from == address(0) || to == address(0), "Transfers paused");
+        super._beforeTokenTransfer(from, to, amount);
     }
 }
