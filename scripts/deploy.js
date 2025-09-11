@@ -1,32 +1,35 @@
 const { ethers } = require("hardhat");
-const { parseEther } = ethers;
 
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  console.log("Deploying contracts with the account:", deployer.address);
+  console.log("Deploying NECTR Token with the account:", deployer.address);
   try {
     console.log(
       "Account balance:",
       (await ethers.provider.getBalance(deployer.address)).toString()
     );
 
-    const HemReward = await ethers.getContractFactory("HemReward");
+    const NECTR = await ethers.getContractFactory("NECTR");
 
-    const initialSupply = parseEther("100");
-    console.log("Initial supply:", initialSupply.toString());
-
-    const maxSupply = parseEther("1000");
-    console.log("Max supply:", maxSupply.toString());
-
-    console.log("Deploying HemReward contract...");
-    const hemReward = await HemReward.deploy(initialSupply, maxSupply);
+    console.log("Deploying NECTR Token contract...");
+    const nectr = await NECTR.deploy();
 
     console.log("Waiting for deployment...");
-    await hemReward.waitForDeployment();
+    await nectr.waitForDeployment();
 
-    const hemRewardAddress = await hemReward.getAddress();
-    console.log("HemReward deployed to:", hemRewardAddress);
+    const nectrAddress = await nectr.getAddress();
+    console.log("NECTR Token deployed to:", nectrAddress);
+
+    // Verify deployment
+    const totalSupply = await nectr.totalSupply();
+    const maxSupply = await nectr.MAX_SUPPLY();
+    const contractStats = await nectr.getContractStats();
+    
+    console.log("Total Supply:", ethers.formatEther(totalSupply));
+    console.log("Max Supply:", ethers.formatEther(maxSupply));
+    console.log("Total Staked:", ethers.formatEther(contractStats.totalStaked));
+    console.log("Total Rewards Distributed:", ethers.formatEther(contractStats.totalRewards));
 
     const fs = require("fs");
     const contractsDir = __dirname + "/../contracts";
@@ -39,12 +42,16 @@ async function main() {
       contractsDir + "/contractAddress.json",
       JSON.stringify(
         {
-          HemReward: hemRewardAddress,
+          NECTR: nectrAddress,
+          network: "sepolia",
+          chainId: 11155111,
         },
         undefined,
         2
       )
     );
+
+    console.log("Contract address saved to contracts/contractAddress.json");
   } catch (error) {
     console.log("Deployment failed");
     console.error("error:", error.message);

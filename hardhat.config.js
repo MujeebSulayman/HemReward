@@ -5,8 +5,12 @@ module.exports = {
 	defaultNetwork: 'sepolia',
 	networks: {
 		sepolia: {
-			url: process.env.NEXT_PUBLIC_RPC_URL,
-			accounts: [process.env.PRIVATE_KEY],
+			url: process.env.SEPOLIA_RPC_URL || 'https://sepolia.infura.io/v3/your-project-id',
+			accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+			chainId: 11155111,
+		},
+		hardhat: {
+			chainId: 1337,
 		},
 	},
 	solidity: {
@@ -20,5 +24,10 @@ module.exports = {
 	},
 	mocha: {
 		timeout: 40000,
+	},
+	etherscan: {
+		apiKey: {
+			sepolia: process.env.ETHERSCAN_API_KEY,
+		},
 	},
 };

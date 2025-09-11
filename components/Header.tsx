@@ -5,10 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CgMenuLeft } from "react-icons/cg";
 import { FaTimes } from "react-icons/fa";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
+import { getTokenBalance } from "../services/blockchain";
 
 const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
+  const [tokenBalance, setTokenBalance] = useState<string>("0");
+  const { address, isConnected } = useAccount();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,11 +22,30 @@ const Header: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const fetchTokenBalance = async () => {
+      if (address) {
+        try {
+          const balance = await getTokenBalance(address);
+          setTokenBalance(balance);
+        } catch (error) {
+          console.error("Error fetching token balance:", error);
+        }
+      }
+    };
+
+    fetchTokenBalance();
+    
+    // Refresh balance every 30 seconds
+    const interval = setInterval(fetchTokenBalance, 30000);
+    return () => clearInterval(interval);
+  }, [address]);
+
   return (
     <motion.header
       className={`fixed z-50 top-0 right-0 left-0 transition-all duration-300 ${
         scrolled
-          ? "bg-purple-700/10 backdrop-blur-2xl border-b border-purple-500/10"
+          ? "bg-blue-900/10 backdrop-blur-2xl border-b border-blue-500/10"
           : "bg-transparent"
       }`}
       initial={{ y: -100 }}
@@ -32,17 +55,26 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4 md:justify-start md:space-x-10">
           <div className="flex justify-start lg:w-0 lg:flex-1">
-            <Link
-              href={"/"}
-              className="text-web3-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 tracking-tight"
-            >
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+            <Link href="/" className="flex items-center space-x-3">
+              <motion.div 
+                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center animate-token-glow"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                Hemswap
-              </motion.span>
+                <span className="text-white font-bold text-lg">🪙</span>
+              </motion.div>
+              <div>
+                <motion.span 
+                  className="text-white font-bold text-xl"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  NECTR
+                </motion.span>
+                <div className="text-xs text-blue-400">Token Ecosystem</div>
+              </div>
             </Link>
           </div>
           <div className="-mr-2 -my-2 md:hidden">
@@ -76,7 +108,15 @@ const Header: React.FC = () => {
               Referrals
             </Link>
           </nav>
-          <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
+          <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0 space-x-4">
+            {isConnected && (
+              <div className="bg-purple-900/30 border border-purple-700/50 rounded-lg px-4 py-2">
+                <div className="text-sm text-purple-300">NECTR Balance</div>
+                <div className="text-lg font-bold text-white">
+                  {parseFloat(tokenBalance).toFixed(2)} NECTR
+                </div>
+              </div>
+            )}
             <ConnectButton
               showBalance={false}
               accountStatus={{
@@ -102,7 +142,7 @@ const Header: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <Link href={"/"} className="text-lg font-normal text-white">
-                      Hemswap
+                      NECTR
                     </Link>
                   </div>
                   <div className="-mr-2">

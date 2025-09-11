@@ -1,12 +1,18 @@
 import React from "react";
 import Hero from "../../components/Hero";
-import TokenMint from "../../components/TokenMint";
+import TokenFaucet from "../../components/TokenFaucet";
+import StakingInterface from "../../components/StakingInterface";
+import SocialFeed from "../../components/SocialFeed";
+import NewsModule from "../../components/NewsModule";
 
 const Index = () => {
   return (
     <div>
       <Hero />
-      <TokenMint />
+      <TokenFaucet />
+      <StakingInterface />
+      <SocialFeed />
+      <NewsModule />
     </div>
   );
 };
