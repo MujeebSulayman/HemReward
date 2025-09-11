@@ -137,6 +137,33 @@ const getPendingRewards = async (address: string): Promise<string> => {
   }
 };
 
+// Debug function to help with testing rewards
+const getRewardCalculation = async (address: string): Promise<{
+  timeStaked: number;
+  apyRate: number;
+  annualReward: string;
+  rewards: string;
+}> => {
+  try {
+    const contract = await getEthereumContract();
+    const calculation = await contract.getRewardCalculation(address);
+    return {
+      timeStaked: Number(calculation.timeStaked),
+      apyRate: Number(calculation.apyRate),
+      annualReward: fromWei(calculation.annualReward),
+      rewards: fromWei(calculation.rewards)
+    };
+  } catch (error) {
+    console.error("Error getting reward calculation:", error);
+    return {
+      timeStaked: 0,
+      apyRate: 0,
+      annualReward: "0",
+      rewards: "0"
+    };
+  }
+};
+
 const getStakeInfo = async (address: string): Promise<{
   amount: string;
   timestamp: number;
@@ -320,6 +347,78 @@ const claimReferralReward = async (user: string): Promise<any> => {
   return Promise.resolve({ hash: "0xmock" });
 };
 
+// Essential functions for the demo
+const getMinStakeAmount = async (): Promise<string> => {
+  try {
+    const contract = await getEthereumContract();
+    const minAmount = await contract.minStakeAmount();
+    return fromWei(minAmount);
+  } catch (error) {
+    console.error("Error getting min stake amount:", error);
+    return "0";
+  }
+};
+
+const getMaxStakeAmount = async (): Promise<string> => {
+  try {
+    const contract = await getEthereumContract();
+    const maxAmount = await contract.maxStakeAmount();
+    return fromWei(maxAmount);
+  } catch (error) {
+    console.error("Error getting max stake amount:", error);
+    return "0";
+  }
+};
+
+const getTotalRewardsDistributed = async (): Promise<string> => {
+  try {
+    const contract = await getEthereumContract();
+    const totalRewards = await contract.totalRewardsDistributed();
+    return fromWei(totalRewards);
+  } catch (error) {
+    console.error("Error getting total rewards distributed:", error);
+    return "0";
+  }
+};
+
+const getStakingStartTime = async (): Promise<number> => {
+  try {
+    const contract = await getEthereumContract();
+    const startTime = await contract.stakingStartTime();
+    return Number(startTime);
+  } catch (error) {
+    console.error("Error getting staking start time:", error);
+    return 0;
+  }
+};
+
+const isPaused = async (): Promise<boolean> => {
+  try {
+    const contract = await getEthereumContract();
+    return await contract.paused();
+  } catch (error) {
+    console.error("Error checking pause status:", error);
+    return false;
+  }
+};
+
+// Public faucet function
+const claimFaucetTokens = async (): Promise<any> => {
+  if (!ethereum) {
+    return Promise.reject(new Error("Please install a wallet provider"));
+  }
+
+  try {
+    const contract = await getEthereumContract();
+    tx = await contract.claimFaucetTokens();
+    await tx.wait();
+    return Promise.resolve(tx);
+  } catch (error: any) {
+    console.error("Faucet claim error:", error);
+    return Promise.reject(error.message || "Faucet claim failed");
+  }
+};
+
 export {
   stakeTokens,
   unstakeTokens,
@@ -329,6 +428,7 @@ export {
   getTotalStaked,
   getUserStakedAmount,
   getPendingRewards,
+  getRewardCalculation,
   getStakeInfo,
   getTokenBalance,
   getUserTier,
@@ -341,6 +441,14 @@ export {
   distributeReward,
   setReferral,
   claimReferralReward,
+  // Essential functions
+  getMinStakeAmount,
+  getMaxStakeAmount,
+  getTotalRewardsDistributed,
+  getStakingStartTime,
+  isPaused,
+  // Faucet function
+  claimFaucetTokens,
   toWei,
   fromWei,
 };

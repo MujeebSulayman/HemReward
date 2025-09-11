@@ -172,14 +172,14 @@ contract NECTR is ERC20, Ownable, ReentrancyGuard, Pausable {
                 emit TierUpgraded(msg.sender, oldTier, newTier);
             }
         } else {
-            stakes[msg.sender] = StakeInfo({
+        stakes[msg.sender] = StakeInfo({
                 amount: amount,
-                timestamp: block.timestamp,
+            timestamp: block.timestamp,
                 lastClaimTime: block.timestamp,
                 tier: newTier,
                 totalRewardsClaimed: 0,
                 isActive: true
-            });
+        });
         }
         
         totalStakedByUser[msg.sender] = newTotalStaked;
@@ -228,7 +228,7 @@ contract NECTR is ERC20, Ownable, ReentrancyGuard, Pausable {
         require(stakes[msg.sender].isActive, "No active stake");
         _claimRewardsInternal(msg.sender);
     }
-
+        
     function _claimRewardsInternal(address user) internal {
         uint256 rewards = _calculateRewards(user);
         require(rewards > 0, "No rewards to claim");
@@ -261,7 +261,7 @@ contract NECTR is ERC20, Ownable, ReentrancyGuard, Pausable {
         uint256 timeStaked = block.timestamp.sub(stakes[user].lastClaimTime);
         uint256 apyRate = tierInfo[stakes[user].tier].apyRate;
         uint256 annualReward = stakes[user].amount.mul(apyRate).div(BASIS_POINTS);
-        uint256 rewards = annualReward.mul(timeStaked).div(365 days); // Calculate daily rewards
+        uint256 rewards = annualReward.mul(timeStaked).div(365 days); // Calculate rewards based on time staked
         
         return rewards;
     }
@@ -272,6 +272,25 @@ contract NECTR is ERC20, Ownable, ReentrancyGuard, Pausable {
 
     function getPendingRewards(address user) external view returns (uint256) {
         return _calculateRewards(user);
+    }
+
+    // Debug function to help with testing rewards
+    function getRewardCalculation(address user) external view returns (
+        uint256 timeStaked,
+        uint256 apyRate,
+        uint256 annualReward,
+        uint256 rewards
+    ) {
+        if (!stakes[user].isActive || stakes[user].amount == 0) {
+            return (0, 0, 0, 0);
+        }
+        
+        timeStaked = block.timestamp.sub(stakes[user].lastClaimTime);
+        apyRate = tierInfo[stakes[user].tier].apyRate;
+        annualReward = stakes[user].amount.mul(apyRate).div(BASIS_POINTS);
+        rewards = annualReward.mul(timeStaked).div(365 days);
+        
+        return (timeStaked, apyRate, annualReward, rewards);
     }
 
     function getTotalStaked() external view returns (uint256) {
@@ -336,6 +355,18 @@ contract NECTR is ERC20, Ownable, ReentrancyGuard, Pausable {
         require(amount <= balanceOf(address(this)), "Insufficient contract balance");
         _transfer(address(this), owner(), amount);
         emit EmergencyWithdraw(owner(), amount);
+    }
+
+    // Public faucet function for demo purposes
+    function claimFaucetTokens() external {
+        require(!blacklisted[msg.sender], "Account is blacklisted");
+        require(balanceOf(msg.sender) == 0, "Wallet already has tokens");
+        
+        uint256 faucetAmount = 1000 * 10**18; // 1000 NECTR tokens
+        require(totalSupply().add(faucetAmount) <= MAX_SUPPLY, "Max supply exceeded");
+        
+        _mint(msg.sender, faucetAmount);
+        emit TokensMinted(msg.sender, faucetAmount, "Faucet claim");
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {

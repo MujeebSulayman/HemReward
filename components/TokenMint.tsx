@@ -35,12 +35,12 @@ const StatCard: React.FC<{
   textColor: string;
 }> = ({ title, value, icon, bgColor, textColor }) => (
   <div
-    className={`p-5 rounded-xl ${bgColor} flex items-center space-x-4 shadow-lg transform transition-all duration-300 hover:scale-105`}
+    className={`p-6 rounded-2xl ${bgColor} flex items-center space-x-4 shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/10`}
   >
-    <div className={`p-3 rounded-full ${textColor} bg-opacity-20`}>{icon}</div>
+    <div className={`p-4 rounded-xl ${textColor} bg-opacity-20`}>{icon}</div>
     <div>
-      <p className="text-sm font-medium text-gray-400">{title}</p>
-      <p className="text-xl font-bold text-white" title={value}>
+      <p className="text-sm font-medium text-gray-300 mb-1">{title}</p>
+      <p className="text-2xl font-bold text-white" title={value}>
         {formatLargeNumber(value)}
       </p>
     </div>
@@ -90,7 +90,7 @@ const TokenMint: React.FC = () => {
     try {
       setLoading(true);
       const parsedAmount = amount
-        ? parseFloat(amount.replace(/,/g, "").replace(" HMR", ""))
+        ? parseFloat(amount.replace(/,/g, "").replace(" NECTR", ""))
         : 100;
 
       await mintTokens(parsedAmount);
@@ -119,16 +119,26 @@ const TokenMint: React.FC = () => {
   const mintPercentage = calculatePercentage(totalMinted, maxSupply);
 
   return (
-    <div className="py-24 bg-gradient-to-br from-gray-900 via-black to-gray-900 px-4 sm:px-6 lg:px-8">
+    <div className="py-24 bg-gradient-to-br from-slate-900 via-gray-900 to-black px-4 sm:px-6 lg:px-8">
       <ToastContainer theme="dark" />
 
       <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-6 animate-token-glow">
+            <span className="text-3xl">🏭</span>
+          </div>
+          <h1 className="text-5xl font-extrabold text-white mb-6">
+            NECTR Token <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Minting</span>
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Mint new NECTR tokens to expand the ecosystem. This feature is available only to 
+            <span className="text-blue-400 font-semibold"> contract owners and authorized minters</span>.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Token Stats */}
           <div className="lg:col-span-2 space-y-6">
-            <h1 className="text-4xl font-extrabold text-white mb-6">
-              Token Ecosystem
-            </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <StatCard
@@ -227,10 +237,16 @@ const TokenMint: React.FC = () => {
 
           {/* Right Column - Minting Section */}
           <div className="space-y-6">
-            <div className="bg-gray-800/50 rounded-2xl p-8 border border-gray-700/50 shadow-2xl">
-              <h2 className="text-2xl font-bold text-white mb-6 text-center">
-                Mint HMR Tokens
-              </h2>
+            <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-3xl p-8 border border-blue-700/30 shadow-2xl">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-4">
+                  <span className="text-2xl">🏭</span>
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-2">
+                  Mint NECTR Tokens
+                </h2>
+                <p className="text-gray-400">Create new tokens for the ecosystem</p>
+              </div>
 
               <div className="space-y-6">
                 <div>
@@ -238,7 +254,7 @@ const TokenMint: React.FC = () => {
                     htmlFor="amount"
                     className="block text-sm font-medium text-gray-300 mb-2"
                   >
-                    Amount to Mint (Default: 100 HMR)
+                    Amount to Mint (Default: 100 NECTR)
                   </label>
                   <div className="relative">
                     <input
@@ -247,7 +263,7 @@ const TokenMint: React.FC = () => {
                       value={amount}
                       onChange={(e) => {
                         const inputVal = e.target.value;
-                        if (/^[\d,]*\.?\d* ?HMR?$/.test(inputVal)) {
+                        if (/^[\d,]*\.?\d* ?NECTR?$/.test(inputVal)) {
                           setAmount(inputVal);
                         }
                       }}
@@ -255,24 +271,31 @@ const TokenMint: React.FC = () => {
                       placeholder="Enter token amount (default 100)"
                     />
                     <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500">
-                      HMR
+                      NECTR
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-2">
-                    Default mint amount is 100 HMR. Leave blank to use default.
+                    Default mint amount is 100 NECTR. Leave blank to use default.
                   </p>
                 </div>
 
                 <button
                   onClick={handleMint}
                   disabled={loading || !address}
-                  className={`w-full py-4 rounded-lg text-white font-bold text-lg transition-all duration-300 ${
+                  className={`w-full py-4 rounded-xl text-white font-bold text-lg transition-all duration-300 ${
                     loading || !address
                       ? "bg-gray-700 cursor-not-allowed"
-                      : "bg-purple-700 hover:bg-purple-600 active:bg-purple-800 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 active:from-blue-800 active:to-purple-800 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg hover:shadow-blue-500/25"
                   }`}
                 >
-                  {loading ? "Minting..." : "Mint Tokens"}
+                  {loading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Minting...</span>
+                    </div>
+                  ) : (
+                    "Mint Tokens"
+                  )}
                 </button>
 
                 {!address && (
