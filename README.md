@@ -206,49 +206,7 @@ npx hardhat run scripts/deploy.js --network mumbai
 npx hardhat run scripts/deploy.js --network localhost
 ```
 
-### Frontend Deployment
-The application can be deployed to:
-- **Vercel**: Connect your GitHub repository
-- **Netlify**: Deploy from build folder
-- **IPFS**: Use `yarn export` and deploy to IPFS
 
-## 🔒 Security Considerations
-
-- Smart contracts use OpenZeppelin's battle-tested libraries
-- ReentrancyGuard prevents reentrancy attacks
-- Owner-only functions for critical operations
-- Input validation on all user inputs
-- Proper error handling and user feedback
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Email: nectr.devs@gmail.com
-- Twitter: [@NECTRToken](https://twitter.com/NECTRToken)
-- Telegram: [NECTR Community](https://t.me/NECTRToken)
-- Discord: [NECTR Discord](https://discord.gg/NECTRToken)
-
-## 🎯 Roadmap
-
-- [ ] Multi-chain support (Ethereum, BSC, Avalanche)
-- [ ] Advanced staking pools with different APYs
-- [ ] NFT integration for health achievements
-- [ ] Mobile app development
-- [ ] Healthcare provider partnerships
-- [ ] Governance token features
-- [ ] Cross-chain bridge implementation
 
 ## 📊 Demo Features
 
@@ -260,7 +218,7 @@ This demo includes:
 - ✅ News module with category filtering
 - ✅ Responsive design and animations
 - ✅ Transaction status tracking
-- ✅ Polygon Mumbai testnet deployment ready
+- ✅ Sepolia testnet deployment ready
 
 ---
 

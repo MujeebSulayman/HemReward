@@ -6,6 +6,7 @@ import {
   getMaxSupply,
   getTotalMinted,
   getClaimedRewards,
+  isAuthorizedMinter,
 } from "../services/blockchain";
 import {
   formatTokenAmount,
@@ -18,34 +19,11 @@ import { useAccount } from "wagmi";
 
 const formatLargeNumber = (value: string) => {
   const num = parseFloat(value);
-
-  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(2)}B`;
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(2)}M`;
-  if (num >= 1_000) return `${(num / 1_000).toFixed(2)}K`;
-
-  return num.toFixed(2);
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B`;
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+  return num.toFixed(0);
 };
-
-// Reusable Stat Component
-const StatCard: React.FC<{
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  bgColor: string;
-  textColor: string;
-}> = ({ title, value, icon, bgColor, textColor }) => (
-  <div
-    className={`p-6 rounded-2xl ${bgColor} flex items-center space-x-4 shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/10`}
-  >
-    <div className={`p-4 rounded-xl ${textColor} bg-opacity-20`}>{icon}</div>
-    <div>
-      <p className="text-sm font-medium text-gray-300 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-white" title={value}>
-        {formatLargeNumber(value)}
-      </p>
-    </div>
-  </div>
-);
 
 const TokenMint: React.FC = () => {
   const { address } = useAccount();
@@ -54,19 +32,22 @@ const TokenMint: React.FC = () => {
   const [totalMinted, setTotalMinted] = useState<string>("0");
   const [claimedRewards, setClaimedRewards] = useState<string>("0");
   const [loading, setLoading] = useState<boolean>(false);
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchSupplyData = async () => {
       try {
-        const [max, minted, claimed] = await Promise.all([
+        const [max, minted, claimed, authorized] = await Promise.all([
           getMaxSupply(),
           getTotalMinted(),
           address ? getClaimedRewards(address) : "0",
+          address ? isAuthorizedMinter(address) : false,
         ]);
 
         setMaxSupply(max);
         setTotalMinted(minted);
         setClaimedRewards(claimed);
+        setIsAuthorized(authorized);
       } catch (error) {
         toast.error("Failed to fetch supply data", {
           position: "top-right",
@@ -118,148 +99,134 @@ const TokenMint: React.FC = () => {
 
   const mintPercentage = calculatePercentage(totalMinted, maxSupply);
 
-  return (
-    <div className="py-24 bg-gradient-to-br from-slate-900 via-gray-900 to-black px-4 sm:px-6 lg:px-8">
-      <ToastContainer theme="dark" />
-
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-6 animate-token-glow">
-            <span className="text-3xl">🏭</span>
+  if (!address) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
           </div>
-          <h1 className="text-5xl font-extrabold text-white mb-6">
-            NECTR Token <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Minting</span>
+          <h2 className="text-3xl font-bold text-amber-300 mb-3">Connect Your Wallet</h2>
+          <p className="text-lg text-gray-300">Connect your wallet to access token minting</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold text-red-300 mb-3">Access Denied</h2>
+          <p className="text-lg text-gray-300">You are not authorized to mint tokens</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden pt-20">
+      <ToastContainer theme="dark" />
+      
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-full blur-lg animate-bounce"></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-full blur-2xl animate-pulse"></div>
+      </div>
+
+      <div className="relative z-10 container mx-auto px-4 py-16">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl mb-8 shadow-2xl">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h1 className="text-6xl font-black text-white mb-6 tracking-tight">
+            TOKEN <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-red-400">MINTING</span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Mint new NECTR tokens to expand the ecosystem. This feature is available only to 
-            <span className="text-blue-400 font-semibold"> contract owners and authorized minters</span>.
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Create new <span className="text-amber-400 font-semibold">NECTR tokens</span> to expand the ecosystem
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Token Stats */}
-          <div className="lg:col-span-2 space-y-6">
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <StatCard
-                title="Max Supply"
-                value={maxSupply}
-                icon={
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                }
-                bgColor="bg-purple-900/30"
-                textColor="text-purple-400"
-              />
-
-              <StatCard
-                title="Total Minted"
-                value={totalMinted}
-                icon={
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                }
-                bgColor="bg-green-900/30"
-                textColor="text-green-400"
-              />
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          
+          {/* Stats Cards */}
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/20 shadow-xl">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl">📊</span>
+                </div>
+                <h3 className="text-2xl font-bold text-blue-400 mb-1">{formatLargeNumber(maxSupply)}</h3>
+                <p className="text-gray-300 font-medium text-sm">Max Supply</p>
+                <p className="text-xs text-gray-400 mt-1">NECTR Tokens</p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              <StatCard
-                title="Minted Percentage"
-                value={formatPercentage(mintPercentage)}
-                icon={
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                }
-                bgColor="bg-blue-900/30"
-                textColor="text-blue-400"
-              />
+            <div className="bg-gradient-to-br from-emerald-900/30 to-green-900/30 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/20 shadow-xl">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl">🏭</span>
+                </div>
+                <h3 className="text-2xl font-bold text-emerald-400 mb-1">{formatLargeNumber(totalMinted)}</h3>
+                <p className="text-gray-300 font-medium text-sm">Total Minted</p>
+                <p className="text-xs text-gray-400 mt-1">NECTR Tokens</p>
+              </div>
+            </div>
 
-              {address && (
-                <StatCard
-                  title="Claimed Rewards"
-                  value={claimedRewards}
-                  icon={
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  }
-                  bgColor="bg-indigo-900/30"
-                  textColor="text-indigo-400"
-                />
-              )}
+            <div className="bg-gradient-to-br from-purple-900/30 to-violet-900/30 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/20 shadow-xl">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl">📈</span>
+                </div>
+                <h3 className="text-2xl font-bold text-purple-400 mb-1">{formatPercentage(mintPercentage)}</h3>
+                <p className="text-gray-300 font-medium text-sm">Minted %</p>
+                <p className="text-xs text-gray-400 mt-1">Of Max Supply</p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-orange-900/30 to-red-900/30 backdrop-blur-xl rounded-2xl p-6 border border-orange-500/20 shadow-xl">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl">💰</span>
+                </div>
+                <h3 className="text-2xl font-bold text-orange-400 mb-1">{formatLargeNumber(claimedRewards)}</h3>
+                <p className="text-gray-300 font-medium text-sm">Claimed Rewards</p>
+                <p className="text-xs text-gray-400 mt-1">NECTR Tokens</p>
+              </div>
             </div>
           </div>
 
-          {/* Right Column - Minting Section */}
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-3xl p-8 border border-blue-700/30 shadow-2xl">
+          {/* Minting Section */}
+          <div className="lg:col-span-1">
+            <div className="bg-gradient-to-br from-slate-800/40 to-gray-800/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-600/30 shadow-2xl h-full">
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">🏭</span>
                 </div>
-                <h2 className="text-3xl font-bold text-white mb-2">
-                  Mint NECTR Tokens
-                </h2>
-                <p className="text-gray-400">Create new tokens for the ecosystem</p>
+                <h2 className="text-2xl font-bold text-white mb-2">Mint NECTR Tokens</h2>
+                <p className="text-gray-400 text-sm">Create new tokens for the ecosystem</p>
               </div>
 
               <div className="space-y-6">
                 <div>
-                  <label
-                    htmlFor="amount"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Amount to Mint (Default: 100 NECTR)
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Amount to Mint
                   </label>
                   <div className="relative">
                     <input
                       type="text"
-                      id="amount"
                       value={amount}
                       onChange={(e) => {
                         const inputVal = e.target.value;
@@ -267,25 +234,25 @@ const TokenMint: React.FC = () => {
                           setAmount(inputVal);
                         }
                       }}
-                      className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                      placeholder="Enter token amount (default 100)"
+                      className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-600/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="Enter token amount"
                     />
                     <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500">
                       NECTR
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-2">
-                    Default mint amount is 100 NECTR. Leave blank to use default.
+                    Default amount is 100 NECTR
                   </p>
                 </div>
 
                 <button
                   onClick={handleMint}
-                  disabled={loading || !address}
+                  disabled={loading}
                   className={`w-full py-4 rounded-xl text-white font-bold text-lg transition-all duration-300 ${
-                    loading || !address
+                    loading
                       ? "bg-gray-700 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 active:from-blue-800 active:to-purple-800 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg hover:shadow-blue-500/25"
+                      : "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 transform hover:scale-105 shadow-lg hover:shadow-amber-500/25"
                   }`}
                 >
                   {loading ? (
@@ -298,11 +265,15 @@ const TokenMint: React.FC = () => {
                   )}
                 </button>
 
-                {!address && (
-                  <p className="text-red-400 text-sm text-center mt-4">
-                    Please connect your wallet to mint tokens
+                <div className="bg-amber-900/20 border border-amber-700/30 rounded-xl p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                    <span className="text-amber-300 font-semibold text-sm">Authorized Minter</span>
+                  </div>
+                  <p className="text-gray-300 text-xs">
+                    You have permission to mint new NECTR tokens
                   </p>
-                )}
+                </div>
               </div>
             </div>
           </div>

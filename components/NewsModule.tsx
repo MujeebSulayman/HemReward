@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { fetchLiveNews, fetchNewsByCategory, NewsWebSocket, NewsArticle } from "../services/news";
 
-// NewsArticle interface is now imported from news service
-
 const NewsModule: React.FC = () => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +17,6 @@ const NewsModule: React.FC = () => {
   ];
 
   useEffect(() => {
-    // Initial fetch
     const fetchArticles = async () => {
       setLoading(true);
       try {
@@ -35,7 +32,6 @@ const NewsModule: React.FC = () => {
 
     fetchArticles();
 
-    // Set up real-time WebSocket connection
     const ws = new NewsWebSocket();
     ws.onUpdate((newArticles) => {
       setArticles(newArticles);
@@ -44,7 +40,6 @@ const NewsModule: React.FC = () => {
     ws.connect();
     setWsConnection(ws);
 
-    // Cleanup
     return () => {
       ws.disconnect();
     };
@@ -120,14 +115,14 @@ const NewsModule: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
-      className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700/50 hover:border-purple-700/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 cursor-pointer"
+      className="bg-gradient-to-br from-slate-800/40 to-gray-800/40 backdrop-blur-xl rounded-2xl overflow-hidden border border-slate-600/30 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10 cursor-pointer group"
       onClick={() => setSelectedArticle(article)}
     >
       <div className="relative">
         <img
           src={article.imageUrl}
           alt={article.title}
-          className="w-full h-48 object-cover"
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute top-4 left-4">
           <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getCategoryColor(article.category)}`}>
@@ -136,14 +131,14 @@ const NewsModule: React.FC = () => {
         </div>
       </div>
       <div className="p-6">
-        <div className="flex items-center space-x-2 text-sm text-gray-400 mb-2">
+        <div className="flex items-center space-x-2 text-sm text-gray-400 mb-3">
           <span>{article.source}</span>
           <span>•</span>
           <span>{formatDate(article.publishedAt)}</span>
           <span>•</span>
           <span>{article.readTime}</span>
         </div>
-        <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 hover:text-purple-400 transition-colors">
+        <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-purple-400 transition-colors">
           {article.title}
         </h3>
         <p className="text-gray-300 mb-4 line-clamp-3">
@@ -151,7 +146,7 @@ const NewsModule: React.FC = () => {
         </p>
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-400">By {article.author}</span>
-          <span className="text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors">
+          <span className="text-purple-400 text-sm font-medium group-hover:text-purple-300 transition-colors">
             Read More →
           </span>
         </div>
@@ -165,7 +160,7 @@ const NewsModule: React.FC = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-gradient-to-br from-slate-800/90 to-gray-800/90 backdrop-blur-xl rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-600/30"
       >
         <div className="relative">
           <img
@@ -207,18 +202,31 @@ const NewsModule: React.FC = () => {
   );
 
   return (
-    <div className="py-24 bg-gradient-to-br from-gray-900 via-black to-gray-900 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-white mb-4">
-            Live News & Updates
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden pt-20">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-full blur-lg animate-bounce"></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-2xl animate-pulse"></div>
+      </div>
+
+      <div className="relative z-10 container mx-auto px-4 py-16">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-8 shadow-2xl">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h1 className="text-6xl font-black text-white mb-6 tracking-tight">
+            LIVE <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-cyan-400">NEWS</span>
           </h1>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            Stay informed about the latest developments in the NECTR ecosystem and healthcare blockchain innovation
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Stay informed about the latest developments in the <span className="text-green-400 font-semibold">NECTR ecosystem</span>
           </p>
           
           {/* Real-time indicator */}
-          <div className="mt-4 flex items-center justify-center space-x-4">
+          <div className="mt-8 flex items-center justify-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm text-gray-400">Live updates</span>
@@ -229,7 +237,7 @@ const NewsModule: React.FC = () => {
             <button
               onClick={handleRefresh}
               disabled={loading}
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+              className="text-sm text-green-400 hover:text-green-300 transition-colors disabled:opacity-50"
             >
               {loading ? 'Refreshing...' : 'Refresh'}
             </button>
@@ -244,8 +252,8 @@ const NewsModule: React.FC = () => {
               onClick={() => handleCategoryChange(category.id)}
               className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
                 selectedCategory === category.id
-                  ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
-                  : "bg-gray-800/50 text-gray-300 border border-gray-700/50 hover:bg-gray-700/50"
+                  ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/30"
+                  : "bg-slate-800/50 text-gray-300 border border-slate-700/50 hover:bg-slate-700/50"
               }`}
             >
               {category.name} ({category.count})
@@ -257,13 +265,13 @@ const NewsModule: React.FC = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700/50 animate-pulse">
-                <div className="w-full h-48 bg-gray-700"></div>
+              <div key={i} className="bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-700/50 animate-pulse">
+                <div className="w-full h-48 bg-slate-700"></div>
                 <div className="p-6 space-y-4">
-                  <div className="h-4 bg-gray-700 rounded w-1/4"></div>
-                  <div className="h-6 bg-gray-700 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-700 rounded w-full"></div>
-                  <div className="h-4 bg-gray-700 rounded w-2/3"></div>
+                  <div className="h-4 bg-slate-700 rounded w-1/4"></div>
+                  <div className="h-6 bg-slate-700 rounded w-3/4"></div>
+                  <div className="h-4 bg-slate-700 rounded w-full"></div>
+                  <div className="h-4 bg-slate-700 rounded w-2/3"></div>
                 </div>
               </div>
             ))}
@@ -284,11 +292,11 @@ const NewsModule: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-2xl p-8 border border-purple-700/50"
+              className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 backdrop-blur-xl rounded-2xl p-8 border border-green-700/50 shadow-2xl"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div>
-                  <div className="flex items-center space-x-2 text-sm text-purple-300 mb-4">
+                  <div className="flex items-center space-x-2 text-sm text-green-300 mb-4">
                     <span>{articles[0].source}</span>
                     <span>•</span>
                     <span>{formatDate(articles[0].publishedAt)}</span>
@@ -297,7 +305,7 @@ const NewsModule: React.FC = () => {
                   <p className="text-gray-300 mb-6 text-lg leading-relaxed">{articles[0].summary}</p>
                   <button
                     onClick={() => setSelectedArticle(articles[0])}
-                    className="px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-500/25"
                   >
                     Read Full Article
                   </button>

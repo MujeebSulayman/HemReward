@@ -91,7 +91,7 @@ const TokenFaucet: React.FC = () => {
   const canClaimNow = canClaim();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden pt-20">
       <ToastContainer theme="dark" />
       
       {/* Animated Background Elements */}
