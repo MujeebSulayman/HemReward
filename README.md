@@ -1,8 +1,8 @@
-# NECTR Token Ecosystem 🪙
+# NECTR Token Ecosystem 
 
 Welcome to NECTR - a modern token ecosystem where you can earn rewards by staking your tokens! This is a complete platform that combines cryptocurrency staking with social features and news updates.
 
-## ✨ What is NECTR?
+##  What is NECTR?
 
 NECTR is a token ecosystem that lets you:
 
@@ -11,35 +11,35 @@ NECTR is a token ecosystem that lets you:
 - **Stay Informed**: Read the latest news about the NECTR ecosystem
 - **Easy Access**: Get free tokens to try out the platform
 
-## 🎯 Key Features
+##  Key Features
 
-### 💰 Staking & Rewards
+### Staking & Rewards
 
 - **Multiple Tiers**: Bronze (5%), Silver (8%), Gold (12%), Platinum (15%) APY
 - **Flexible Staking**: Stake and unstake anytime
 - **Real-time Rewards**: Watch your rewards grow in real-time
 - **Easy Claiming**: One-click reward claiming
 
-### 🎁 Token Faucet
+### Token Faucet
 
 - **Free Tokens**: Get free NECTR tokens to try the platform
 - **No Cost**: Completely free to use
 - **Instant Access**: Start staking immediately
 
-### 📱 Modern Interface
+###  Modern Interface
 
 - **Beautiful Design**: Sleek, modern Web3 interface
 - **Mobile Friendly**: Works perfectly on all devices
 - **Smooth Animations**: Enjoy fluid interactions
 - **Real-time Updates**: Live data and transaction tracking
 
-### 🌐 Social Features
+### Social Features
 
 - **Twitter Integration**: Latest updates from the NECTR community
 - **News Feed**: Stay updated with ecosystem news
 - **Community Links**: Connect with other NECTR users
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Step 1: Connect Your Wallet
 
@@ -68,16 +68,16 @@ NECTR is a token ecosystem that lets you:
 2. Your earned tokens will be added to your wallet
 3. You can also unstake your original tokens anytime
 
-## 🏆 Staking Tiers
+## Staking Tiers
 
 | Tier | Minimum Stake | APY | Benefits |
 |------|---------------|-----|----------|
-| 🥉 Bronze | 0+ NECTR | 5% | Entry level staking |
-| 🥈 Silver | 1,000+ NECTR | 8% | Higher rewards |
-| 🥇 Gold | 5,000+ NECTR | 12% | Premium staking |
-| 💎 Platinum | 10,000+ NECTR | 15% | Maximum rewards |
+|  Bronze | 0+ NECTR | 5% | Entry level staking |
+|  Silver | 1,000+ NECTR | 8% | Higher rewards |
+|  Gold | 5,000+ NECTR | 12% | Premium staking |
+|  Platinum | 10,000+ NECTR | 15% | Maximum rewards |
 
-## 💡 How It Works
+##  How It Works
 
 1. **Connect**: Link your crypto wallet to the platform
 2. **Acquire**: Get NECTR tokens (free from faucet or purchase)
@@ -85,14 +85,14 @@ NECTR is a token ecosystem that lets you:
 4. **Earn**: Watch your rewards accumulate over time
 5. **Claim**: Withdraw your rewards whenever you want
 
-## 🔒 Security & Trust
+##  Security & Trust
 
 - **Smart Contracts**: All staking is handled by secure smart contracts
 - **Transparent**: All transactions are recorded on the blockchain
 - **No Hidden Fees**: Only pay for transaction costs
 - **Your Keys**: You always control your tokens
 
-## 🌍 Network Information
+##  Network Information
 
 NECTR runs on the **Ethereum Sepolia testnet** - a safe testing environment where you can try everything without using real money.
 
@@ -105,7 +105,7 @@ To pay for transactions, you'll need some Sepolia ETH:
 3. Request test ETH
 4. You're ready to transact!
 
-## 📱 Mobile Experience
+## Mobile Experience
 
 NECTR works great on mobile devices! Simply:
 
@@ -114,7 +114,7 @@ NECTR works great on mobile devices! Simply:
 3. Connect your mobile wallet (MetaMask mobile app)
 4. Start staking on the go!
 
-## 🆘 Need Help?
+##  Need Help?
 
 ### Common Questions
 
@@ -133,7 +133,7 @@ A: Absolutely! You have full control over your staked tokens.
 **Q: What if I have problems?**
 A: Check the transaction status in your wallet, or try refreshing the page.
 
-## 🎉 Ready to Start?
+##  Ready to Start?
 
 NECTR makes earning crypto rewards simple and fun. Whether you're new to cryptocurrency or an experienced user, our platform provides everything you need to start earning rewards today.
 
